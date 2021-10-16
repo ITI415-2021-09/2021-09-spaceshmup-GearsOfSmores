@@ -35,8 +35,11 @@ public class WeaponDefinition
     public float continuousDamage = 0; // Damage per second (Laser)
     public float delayBetweenShots = 0;
     public float velocity = 20; // Speed of projectiles
+    
+    
 }
-public class Weapon : MonoBehaviour {
+public class Weapon : MonoBehaviour
+{
     static public Transform PROJECTILE_ANCHOR;
 
     [Header("Set Dynamically")]
@@ -46,6 +49,11 @@ public class Weapon : MonoBehaviour {
     public GameObject collar;
     public float lastShotTime; // Time last shot was fired
     private Renderer collarRend;
+    private float defDistanceRay = 100f;
+    public Transform laserFirePoint;
+    public LineRenderer m_lineRenderer;
+    Transform m_transform;
+    public bool canLaser = false;
 
     private void Start()
     {
@@ -56,7 +64,7 @@ public class Weapon : MonoBehaviour {
         SetType(_type);
 
         // Dynamically create an anchor for all Projectiles
-        if(PROJECTILE_ANCHOR == null)
+        if (PROJECTILE_ANCHOR == null)
         {
             GameObject go = new GameObject("_ProjectileAnchor");
             PROJECTILE_ANCHOR = go.transform;
@@ -64,12 +72,12 @@ public class Weapon : MonoBehaviour {
 
         // Find the fireDelegate of the root GameObject
         GameObject rootGO = transform.root.gameObject;
-        if(rootGO.GetComponent<Hero>() != null)
+        if (rootGO.GetComponent<Hero>() != null)
         {
             rootGO.GetComponent<Hero>().fireDelegate += Fire;
         }
     }
-
+  
     public WeaponType type
     {
         get
@@ -105,7 +113,11 @@ public class Weapon : MonoBehaviour {
         // If this.gameObject is inactive, return
         if (!gameObject.activeInHierarchy) return;
         // If it hasn't been enough time between shots, return
-        if (Time.time - lastShotTime < def.delayBetweenShots)
+       if(canLaser == true)
+        {
+            return;
+        }
+        else if (Time.time - lastShotTime < def.delayBetweenShots)
         {
             return;
         }
@@ -132,13 +144,22 @@ public class Weapon : MonoBehaviour {
                 p.transform.rotation = Quaternion.AngleAxis(-10, Vector3.back);
                 p.rigid.velocity = p.transform.rotation * vel;
                 break;
+
+            case WeaponType.laser:
+                canLaser = true;
+                def.delayBetweenShots = 0;
+                p = MakeProjectile();
+                p.rigid.velocity = vel;
+                break;
+
+            
         }
     }
 
     public Projectile MakeProjectile()
     {
         GameObject go = Instantiate<GameObject>(def.projectilePrefab);
-        if(transform.parent.gameObject.tag == "Hero")
+        if (transform.parent.gameObject.tag == "Hero")
         {
             go.tag = "ProjectileHero";
             go.layer = LayerMask.NameToLayer("ProjectileHero");
@@ -155,4 +176,46 @@ public class Weapon : MonoBehaviour {
         lastShotTime = Time.time;
         return p;
     }
+    
+    public Projectile MakeLaser()
+    {
+       GameObject go = Instantiate<GameObject>(def.projectilePrefab);
+        if (transform.parent.gameObject.tag == "Hero")
+        {
+            go.tag = "ProjectileHero";
+            go.layer = LayerMask.NameToLayer("ProjectileHero");
+        }
+        else
+        {
+            go.tag = "ProjectileEnemy";
+            go.layer = LayerMask.NameToLayer("ProjectileEnemy");
+        }
+        go.transform.position = collar.transform.position;
+        go.transform.SetParent(PROJECTILE_ANCHOR, true);
+        Projectile p = go.GetComponent<Projectile>();
+        p.type = type;
+        lastShotTime = 0;
+        return p;
+
+    }
+    /*
+    void Draw2DRay(Vector2 startpos, Vector2 endPos)
+    {
+        m_lineRenderer.SetPosition(0, startpos);
+        m_lineRenderer.SetPosition(0, endPos);
+    }
+
+    void FireLaser()
+    {
+        
+        if (Physics2D.Raycast(collar.transform.position, transform.up))
+        {
+            RaycastHit2D _hit = Physics2D.Raycast(collar.transform.position, transform.up);
+            Draw2DRay(laserFirePoint.position, _hit.point);
+        }
+        else
+        {
+            Draw2DRay(laserFirePoint.position, laserFirePoint.transform.up * defDistanceRay);
+        }
+    }*/
 }
