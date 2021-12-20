@@ -12,6 +12,7 @@ public class Hero : MonoBehaviour {
     public float pitchMult = 30;
     public float gameRestartDelay = 2f;
     public GameObject projectilePrefab;
+    public GameObject laserPrefab;
     public float projectileSpeed = 40;
     public Weapon[] weapons;
     public bool laser = false;
@@ -38,12 +39,14 @@ public class Hero : MonoBehaviour {
         {
             Debug.LogError("Hero.Awake() - Attempted to assign second Hero.S!");
         }
-        //fireDelegate += TempFire;
+       // fireDelegate += TempFire;
 
         // Reset the weapons to start _Hero with 1 blaster
         ClearWeapons();
-        weapons[0].SetType(WeaponType.laser);
+        weapons[0].SetType(WeaponType.blaster);
+        laser = GetComponent<Weapon>().canLaser;
     }
+	
 	
 	// Update is called once per frame
 	void Update()
@@ -64,20 +67,24 @@ public class Hero : MonoBehaviour {
         // Use the fireDelegate to fire Weapons
         // First, make sure the button is pressed: Axis("Jump")
         // Then ensure that fireDelegate isn't null to avoid an error
-        // if (Input.GetAxis("Jump") == 1 && fireDelegate != null)
-        //  {
-        //     fireDelegate();
+         if (Input.GetAxis("Jump") == 1 && fireDelegate != null)
+          {
+            fireDelegate();
 
-        // }
-
-        if (Input.GetButtonDown("Jump"))
+         }
+         if (Input.GetKeyDown("space") && fireDelegate != null)
         {
-            laser = GetComponent<Weapon>().canLaser;
+      
+           
             laser = true;
         }
+        
+      
 
        
     }
+  
+    
 
     private void OnTriggerEnter(Collider other)
     {
